@@ -1,0 +1,11 @@
+{
+    "mysql_username": "root",
+    "mysql_password": "123456",
+    "mysql_dbname": "GIM",
+    "mysql_host": "127.0.0.1:6666",
+    "redis_address": "127.0.0.1:6379",
+    "redis_password": "123456",
+    "listen_port": "10080",
+    "secretkey": "GIM",
+    "data_path": "./avatar"
+}
