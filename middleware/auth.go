@@ -16,7 +16,8 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if strings.Contains(c.Request.URL.Path, "/login") ||
 			strings.Contains(c.Request.URL.Path, "/register") ||
-			(strings.Contains(c.Request.URL.Path, "/avatar") && c.Request.Method == http.MethodGet) {
+			(strings.Contains(c.Request.URL.Path, "/avatar") && c.Request.Method == http.MethodGet) ||
+			(strings.Contains(c.Request.URL.Path, "/sessions") && strings.Contains(c.Request.URL.Path, "/files")) {
 			c.Next()
 			return
 		}

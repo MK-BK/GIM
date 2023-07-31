@@ -4,8 +4,8 @@ type Session struct {
 	Models
 	Scope
 	DisplayName   string
-	LatestMessage string
-	Enabled       bool `gorm:"-"`
+	LatestMessage interface{} `gorm:"-"`
+	Enabled       bool        `gorm:"-"`
 }
 
 type Sessions interface {

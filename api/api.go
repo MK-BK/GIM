@@ -22,6 +22,8 @@ func InitRouter() error {
 	engine.POST("/logout", userLogout)
 	engine.POST("/register", register)
 
+	engine.POST("/upload", upload)
+
 	users := engine.Group("/users")
 	{
 		users.POST("", listUsers)
@@ -63,6 +65,7 @@ func InitRouter() error {
 		sessions.DELETE("/:id", deleteSession)
 		sessions.GET("/:id/messages", listMessages)
 		sessions.POST("/:id/messages", sendMessage)
+		sessions.GET("/:id/messages/files/:fileID", getMessage)
 	}
 
 	moments := engine.Group("/moments")

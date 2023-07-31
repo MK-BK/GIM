@@ -1,7 +1,11 @@
 package api
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"GIM/models"
 	"GIM/service"
@@ -46,12 +50,39 @@ func sendMessage(c *gin.Context) {
 		return
 	}
 
-	message.Kind = session.Kind
-	message.OwnerID = userID
-	message.DestinationID = session.DestinationID
-	message.GroupID = session.GroupID
+	message.Scope = models.Scope{
+		Kind:          session.Kind,
+		OwnerID:       userID,
+		DestinationID: session.DestinationID,
+		GroupID:       session.GroupID,
+	}
 
-	if err := service.DatacenterAPI.HandlerMessage(&message); err != nil {
+	if err := service.DatacenterAPI.HandlerMessage(sessionID, &message); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 	}
+}
+
+func getMessage(c *gin.Context) {
+	var sessionID, fileID string
+	if err := SetPathVar(c, &sessionID, &fileID); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("+++++++++++++++ var:", sessionID, fileID)
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	path := filepath.Join(pwd, "sessions", sessionID, "images", fileID)
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println("++++++++++++++++++ path:", path)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	io.Copy(c.Writer, file)
 }

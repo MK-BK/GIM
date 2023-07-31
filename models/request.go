@@ -2,10 +2,10 @@ package models
 
 type Request struct {
 	Models
+	Scope
 	Description string
 	OwnerName   string `gorm:"-"`
-	Scope
-	Status bool
+	Status      bool
 }
 
 type Requests interface {

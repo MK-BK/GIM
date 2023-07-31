@@ -2,7 +2,6 @@
 build: 
 	cd web && npm run build
 
-txt = "hello world"
-.PHONY test:
+.PHONY clean:
 test: 
 	@echo $$PWD

@@ -132,7 +132,7 @@ func (m *SessionManager) subscribe() {
 					Kind:          models.ScopeUser,
 					OwnerID:       v.DestinationID,
 					DestinationID: v.OwnerID,
-				}, v.Content)
+				}, v.Spec)
 				if err != nil {
 					log.Error(err)
 				}
@@ -154,7 +154,7 @@ func (m *SessionManager) subscribe() {
 						Kind:    models.ScopeGroup,
 						OwnerID: role.OwnerID,
 						GroupID: v.GroupID,
-					}, v.Content)
+					}, v.Spec)
 					if err != nil {
 						log.Error(err)
 					}
@@ -164,8 +164,8 @@ func (m *SessionManager) subscribe() {
 	}
 }
 
-func (m *SessionManager) createOrUpdate(scope *models.Scope, message string) error {
-	session, err := m.getWithScope(scope)
+func (m *SessionManager) createOrUpdate(scope *models.Scope, message interface{}) error {
+	_, err := m.getWithScope(scope)
 
 	if err != nil {
 		return config.DB.Create(&models.Session{
@@ -178,10 +178,11 @@ func (m *SessionManager) createOrUpdate(scope *models.Scope, message string) err
 		}).Error
 	}
 
-	return config.DB.Model(session).Updates(map[string]interface{}{
-		"latest_message": message,
-	}).Error
+	return nil
 
+	// return config.DB.Model(session).Updates(map[string]interface{}{
+	// 	"latest_message": message,
+	// }).Error
 }
 
 func (s *SessionManager) getWithScope(scope *models.Scope) (*models.Session, error) {

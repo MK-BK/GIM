@@ -5,6 +5,9 @@ import (
 	"GIM/pkg/config"
 	"GIM/pkg/event"
 	"errors"
+	"io"
+	"os"
+	"path/filepath"
 
 	Redis "github.com/go-redis/redis"
 )
@@ -97,9 +100,37 @@ func (m *DataCenterManager) GetMessages(sessioID string) ([]*models.Message, err
 	return messages, nil
 }
 
-func (m *DataCenterManager) HandlerMessage(message *models.Message) error {
+func (m *DataCenterManager) HandlerMessage(sessionID string, message *models.Message) error {
 	if err := checkMessageAuth(message); err != nil {
 		message.Error = err.Error()
+	}
+
+	if message.Category == models.CategoryImage {
+		if v, ok := message.Spec.(*models.MessageImage); ok {
+			source, err := os.Open(filepath.Join("/tmp", v.Path))
+			if err != nil {
+				return err
+			}
+			defer source.Close()
+
+			pwd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+
+			if err := os.MkdirAll(filepath.Join(pwd, "sessions", sessionID, "images"), 0755); err != nil {
+				return err
+			}
+
+			path := filepath.Join(pwd, "sessions", sessionID, "images", v.Path)
+			dest, err := os.Create(path)
+			if err != nil {
+				return err
+			}
+			defer dest.Close()
+
+			io.Copy(dest, source)
+		}
 	}
 
 	if err := config.DB.Create(message).Error; err != nil {
