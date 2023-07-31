@@ -12,7 +12,12 @@
                         <avatar :id="message.OwnerID" :name="message.OwnerName" :size="40"></avatar>
                         <div class="content">
                             <div class="title">{{this.$utils.formatTime(message.CreatedAt)}}</div>
-                            <div class="message">{{message.Content}}</div>
+                            <div v-if="message.Category=='TEXT'">
+                                <div class="message">{{message.Spec.Content}}</div>
+                            </div>
+                            <div v-if="message.Category=='IMAGE'">
+                                <el-avatar :size="50" :src="getFile(message.Spec.Path)" />
+                            </div>
                         </div>
                     </div>
                     <div v-if:="message.Error" class="error">
@@ -21,6 +26,15 @@
                 </div>
             </el-main>
             <div class="chat-input-container">
+                <el-upload class="avatar-uploader"
+                    :action="sessionView.url"
+                    :headers="headers"
+                    :show-file-list="false"
+                    :with-credentials='true'
+                    :on-success="handleSuccess">
+                        <el-button size="small" type="primary">发送图片</el-button>
+                </el-upload>
+
                 <div class="chat-input">
                     <textarea ref="textarea" class="chat-textarea" placeholder="请输入消息" v-model="sessionView.content" @keydown.enter.prevent="sendMessage"></textarea>
                     <button class="chat-send-btn" @click="sendMessage">发送</button>
@@ -47,7 +61,12 @@ const sessionView = reactive({
     session: {},
     messages: [],
     content: '',
-    visible: false
+    visible: false,
+    url: '/api/upload'
+})
+
+const headers = reactive({
+    'token': sessionStorage.getItem('token')
 })
 
 onMounted(async () => {
@@ -57,6 +76,19 @@ onMounted(async () => {
         sessionView.visible = false
     });
 });
+
+function getFile(path) {
+    return `http://localhost:10080/sessions/${sessionView.session.ID}/files/${path}`
+}
+
+async function handleSuccess(response, file, fileList) {
+    await sessionStore.sendMessage(sessionView.session.ID, {
+        Category: 'IMAGE',
+        Spec: {
+            Path: response.FileID
+        },
+    })
+}
 
 async function refresh() {
     sessionView.session = await sessionStore.getSession(route.params.id)
@@ -75,8 +107,11 @@ function getMessageError(message) {
 
 async function sendMessage() {
     if (sessionView.content != "") {
-       await sessionStore.sendMessage(session.value.ID, {
-            Content: sessionView.content,
+       await sessionStore.sendMessage(sessionView.session.ID, {
+            Category: 'TEXT',
+            Spec: {
+                Content: sessionView.content
+            },
         })
         sessionView.content = '';
     }
