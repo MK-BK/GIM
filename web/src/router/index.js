@@ -20,22 +20,34 @@ const routes = [
 				path: '/sessions',
 				component: () => import(/* webpackChunkName: "system" */ '@/views/sessions.vue'),
 				children: [
-					{path: '/sessions/:id', component: () => import(/* webpackChunkName: "system" */ '@/views/session/view')},
+					{
+						path: '/sessions/:id', 
+						component: () => import(/* webpackChunkName: "system" */ '@/views/session/view')
+					},
 				]
 			},
 			{
 				path: '/users',
 				component: () => import(/* webpackChunkName: "system" */ '@/views/users.vue'),
 				children: [
-					{path: '/users/:id', component: () => import(/* webpackChunkName: "system" */ '@/views/user/view-user')},
-					{path: '/groups/:id', component: () => import(/* webpackChunkName: "system" */ '@/views/user/view-group')}
+					{
+						path: '/users/:id',
+						component: () => import(/* webpackChunkName: "system" */ '@/views/user/view-user')
+					},
+					{
+						path: '/groups/:id',
+						component: () => import(/* webpackChunkName: "system" */ '@/views/user/view-group')
+					}
 				]
 			},
 			{
 				path: '/requests',
 				component: () => import(/* webpackChunkName: "system" */ '@/views/requests.vue'),
 				children: [
-					{path: '/requests/:id', component: () => import(/* webpackChunkName: "system" */ '@/views/request/view')}
+					{
+						path: '/requests/:id',
+						component: () => import(/* webpackChunkName: "system" */ '@/views/request/view')
+					}
 				]
 			},
 			{

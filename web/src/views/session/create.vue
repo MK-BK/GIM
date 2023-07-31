@@ -2,7 +2,7 @@
     <el-dialog v-model="props.visible" title="创建群聊">
         <el-container>
             <el-header>
-                <el-input placeholder="搜索" v-model="search" clearable></el-input>
+                <el-input placeholder="搜索" v-model="view.search" clearable></el-input>
             </el-header>
             <el-main>
                 <div v-if="!userLists.length" class="empty-content">好友列表为空</div>
@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { computed, onMounted, reactive } from "vue"
 import useStore from '@/stores'
 
 const { sessionStore, userStore, groupStore } = useStore()
@@ -27,30 +27,32 @@ const { sessionStore, userStore, groupStore } = useStore()
 const props = defineProps(['visible'])
 const emits = defineEmits(['close'])
 
-const search = ref('')
-const users = ref([])
-
-const disabled = computed(() => {
-    return users.value.some(function(user) {
-        return user.checked;
-    })
-})
-
-const userLists = computed(() => {
-    if (search !== ''){
-        return (users.value || []).filter((user) => {
-            return user.Name.indexOf(search.value) > -1
-        })
-    }
-    return users
+const view = reactive({
+    users: [],
+    search: ''
 })
 
 onMounted(async () => {
     await refresh()
 })
 
+const disabled = computed(() => {
+    return view.users.some(function(user) {
+        return user.checked;
+    })
+})
+
+const userLists = computed(() => {
+    if (view.search !== ''){
+        return (view.users || []).filter((user) => {
+            return user.Name.indexOf(view.search) > -1
+        })
+    }
+    return view.users
+})
+
 async function refresh() {
-    users.value = (await userStore.listFriends()).map(element => {
+    view.users = (await userStore.listFriends()).map(element => {
         element.checked = false;
         return element;
     });
@@ -58,7 +60,7 @@ async function refresh() {
 
 async function create() {
     const selectUsers = []
-    users.value.forEach((user) => {
+    view.users.forEach((user) => {
         if (user.checked) {
             selectUsers.push(user.ID)
         }
@@ -71,7 +73,7 @@ async function create() {
 
         await sessionStore.createSession({
             Kind: "GROUP",
-            GroupID: group.ID
+            GroupID: view.group.ID
         })
     }
     emits('close')

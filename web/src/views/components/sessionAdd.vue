@@ -43,7 +43,7 @@ const userLists = computed(() => {
             return user.Name.indexOf(search.value) > -1
         })
     }
-    return users
+    return users.value
 })
 
 onMounted(async () => {

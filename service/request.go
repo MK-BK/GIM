@@ -2,7 +2,9 @@ package service
 
 import (
 	"GIM/models"
+	"GIM/pkg/config"
 	"GIM/pkg/event"
+	"fmt"
 )
 
 type RequestManager struct{}
@@ -14,12 +16,12 @@ func NewRequestManager() *RequestManager {
 }
 
 func (m *RequestManager) CreateRequest(request *models.Request) error {
-	return db.Save(&request).Error
+	return config.DB.Save(&request).Error
 }
 
 func (m *RequestManager) GetRequest(id string) (*models.Request, error) {
 	var request models.Request
-	if err := db.Where("id = ?", id).Find(&request).Error; err != nil {
+	if err := config.DB.Where("id = ?", id).Find(&request).Error; err != nil {
 		return nil, err
 	}
 
@@ -28,7 +30,7 @@ func (m *RequestManager) GetRequest(id string) (*models.Request, error) {
 
 func (m *RequestManager) ListRequests(userID string) ([]*models.Request, error) {
 	var requests []*models.Request
-	if err := db.Where("destination_id = ?", userID).
+	if err := config.DB.Where("destination_id = ?", userID).
 		Order("created_at DESC").
 		Find(&requests).Error; err != nil {
 		return nil, err
@@ -48,19 +50,17 @@ func (m *RequestManager) ListRequests(userID string) ([]*models.Request, error) 
 
 func (m *RequestManager) UpdateRequest(userID, id string) error {
 	var request models.Request
-	if err := db.Where("id = ?", id).First(&request).Error; err != nil {
+	if err := config.DB.Where("id = ?", id).First(&request).Error; err != nil {
 		return err
 	}
 
-	// if err := m.Verify(&request, userID); err != nil {
-	// 	return err
-	// }
-
-	if err := db.Model(&request).Update("status", true).Error; err != nil {
+	if err := m.Verify(&request, userID); err != nil {
 		return err
 	}
 
-	log.Info("publish ack request event to module of users")
+	if err := config.DB.Model(&request).Update("status", true).Error; err != nil {
+		return err
+	}
 
 	event.Pub(&models.RequestUpdateEvent{
 		Request: &request,
@@ -68,28 +68,28 @@ func (m *RequestManager) UpdateRequest(userID, id string) error {
 	return nil
 }
 
-// TODO: use const var replace magic number -- 0: user, 1: room
 func (m *RequestManager) Verify(request *models.Request, userID string) error {
-	// switch request.Kind {
-	// case 0:
-	// 	if userID != request.OwnerID {
-	// 		return fmt.Errorf("%s not permission to resolve from %s's request", userID, request.DestinationID)
-	// 	}
-	// case 1:
-	// 	room, err := m.GroupInterface.GetGroup(request.RoomID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if userID != room.ManagerID {
-	// 		return fmt.Errorf("%s not the manager of %s room", userID, room.DisplayName)
-	// 	}
-	// }
+	switch request.Kind {
+	case models.ScopeUser:
+		if userID != request.OwnerID {
+			return fmt.Errorf("%s not permission to resolve from %s's request", userID, request.DestinationID)
+		}
+	case models.ScopeGroup:
+		group, err := models.GlobalEnvironment.Groups.GetGroup(request.GroupID)
+		if err != nil {
+			return err
+		}
+
+		if userID != group.ManagerID {
+			return fmt.Errorf("%s not the manager of %s room", userID, group.DisplayName)
+		}
+	}
 
 	return nil
 }
 
 func (m *RequestManager) DeleteRequest(id string) error {
-	return db.Delete(&models.Request{}, "id = ?", id).Error
+	return config.DB.Delete(&models.Request{}, "id = ?", id).Error
 }
 
 func (*RequestManager) GetDescription(request *models.Request) string {

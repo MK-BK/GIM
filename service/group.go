@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"GIM/models"
+	"GIM/pkg/cache"
+	"GIM/pkg/config"
 	"GIM/pkg/event"
 )
 
@@ -33,7 +35,7 @@ func (*groupManager) ListGroups(id string) ([]*models.Group, error) {
 
 	groups := make([]*models.Group, 0)
 	if len(releations) > 0 {
-		if err := db.Where("id IN ( ? )", releations).Find(&groups).Error; err != nil {
+		if err := config.DB.Where("id IN ( ? )", releations).Find(&groups).Error; err != nil {
 			return nil, err
 		}
 	}
@@ -42,7 +44,7 @@ func (*groupManager) ListGroups(id string) ([]*models.Group, error) {
 }
 
 func (m *groupManager) CreateGroup(userIDs []string, group *models.Group) (*models.Group, error) {
-	if err := db.Save(&group).Error; err != nil {
+	if err := config.DB.Save(&group).Error; err != nil {
 		return nil, err
 	}
 
@@ -57,11 +59,11 @@ func (m *groupManager) CreateGroup(userIDs []string, group *models.Group) (*mode
 
 func (*groupManager) UpdateGroup(id string, patch *models.GroupPatch) error {
 	var group models.Group
-	if err := db.Where("id = ?", id).First(&group).Error; err != nil {
+	if err := config.DB.Where("id = ?", id).First(&group).Error; err != nil {
 		return err
 	}
 
-	return db.Model(&group).Updates(map[string]interface{}{
+	return config.DB.Model(&group).Updates(map[string]interface{}{
 		"display_name": patch.Name,
 		"announcement": patch.Announcement,
 		"verify":       patch.Verify,
@@ -69,12 +71,16 @@ func (*groupManager) UpdateGroup(id string, patch *models.GroupPatch) error {
 }
 
 func (m *groupManager) GetGroup(id string) (*models.Group, error) {
-	var group models.Group
-	if err := db.Where("id = ?", id).Find(&group).Error; err != nil {
+	group, exist := cache.GetGroup(id)
+	if exist {
+		return group, nil
+	}
+
+	if err := config.DB.Where("id = ?", id).Find(&group).Error; err != nil {
 		return nil, err
 	}
 
-	roleAssignments, err := models.GlobalEnvironment.RoleAssignments.GetRoleAssignments(&models.RoleAssignment{
+	roles, err := models.GlobalEnvironment.RoleAssignments.GetRoleAssignments(&models.RoleAssignment{
 		Scope: models.Scope{
 			Kind:    models.ScopeGroup,
 			GroupID: id,
@@ -84,23 +90,23 @@ func (m *groupManager) GetGroup(id string) (*models.Group, error) {
 		log.Error(err)
 	}
 
-	if len(roleAssignments) > 0 {
+	if len(roles) > 0 {
 		releations := make([]string, 0)
-		for _, role := range roleAssignments {
+		for _, role := range roles {
 			releations = append(releations, role.OwnerID)
 		}
 
-		if err := db.Find(&group.Users, releations).Error; err != nil {
+		if err := config.DB.Find(&group.Users, releations).Error; err != nil {
 			return nil, err
 		}
 	}
 
-	return &group, nil
+	return group, nil
 }
 
 func (*groupManager) DeleteGroup(userID, id string) error {
 	var group models.Group
-	if err := db.Find(&group, "id = ?", id).Error; err != nil {
+	if err := config.DB.Find(&group, "id = ?", id).Error; err != nil {
 		return err
 	}
 
@@ -108,7 +114,7 @@ func (*groupManager) DeleteGroup(userID, id string) error {
 		return errors.New("not allow to delete room")
 	}
 
-	if err := db.Delete(&models.Group{}, "id = ?", id).Error; err != nil {
+	if err := config.DB.Delete(&models.Group{}, "id = ?", id).Error; err != nil {
 		return err
 	}
 

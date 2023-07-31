@@ -2,6 +2,7 @@ package service
 
 import (
 	"GIM/models"
+	"GIM/pkg/config"
 )
 
 type RoleAssignmentManager struct{}
@@ -11,16 +12,16 @@ func NewRoleAssignmentManager() *RoleAssignmentManager {
 }
 
 func (*RoleAssignmentManager) CreateRoleAssignments(roles ...*models.RoleAssignment) error {
-	return db.Create(roles).Error
+	return config.DB.Create(roles).Error
 }
 
 func (*RoleAssignmentManager) DeleteRoleAssignments(roles ...*models.RoleAssignment) error {
-	return db.Delete(roles).Error
+	return config.DB.Delete(roles).Error
 }
 
 func (*RoleAssignmentManager) GetRoleAssignments(role *models.RoleAssignment) ([]*models.RoleAssignment, error) {
 	var roleAssignments []*models.RoleAssignment
-	if err := db.Model(role).First(&roleAssignments).Error; err != nil {
+	if err := config.DB.Where(role.Scope).Find(&roleAssignments).Error; err != nil {
 		return nil, err
 	}
 

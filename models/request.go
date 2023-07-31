@@ -5,7 +5,7 @@ type Request struct {
 	Description string
 	OwnerName   string `gorm:"-"`
 	Scope
-	Status string
+	Status bool
 }
 
 type Requests interface {

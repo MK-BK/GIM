@@ -5,7 +5,7 @@ type Message struct {
 	Scope
 	OwnerName string `gorm:"-"`
 	Content   string
-	Error     error
+	Error     string
 }
 
 type MessageDistributionEvent struct {

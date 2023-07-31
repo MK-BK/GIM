@@ -43,7 +43,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Set("userName", claims.UserName)
 			c.Set("userID", claims.UserID)
 
-			if err := config.GetRedisClient().Get(claims.UserID).Err(); err != nil {
+			if err := config.Redis.Get(claims.UserID).Err(); err != nil {
 				c.AbortWithError(http.StatusUnauthorized, errors.New("http.StatusUnauthorized"))
 				return
 			}

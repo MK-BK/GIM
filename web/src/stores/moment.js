@@ -22,21 +22,13 @@ const useMomentStore = defineStore('moment', {
 		async updateMoment(id, moment) {
 			return await http.put(`/api/moments/${id}`, moment)
 		},
-	
-		async createComment(moment) {
-			return await http.post('/api/moments', moment)
-		},
-	
-		async deleteComment(id) {
-			return await http.delete(`/api/moments/${id}`)
-		},
 
 		async createComment(comment) {
-			return await http.post(`/api/comment`, comment)
+			return await http.post(`/api/comments`, comment)
 		},
 
 		async deleteComment(id) {
-			return await http.delete(`/api/comment/${id}`)
+			return await http.delete(`/api/comments/${id}`)
 		}
 	}
 })

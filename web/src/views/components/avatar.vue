@@ -1,15 +1,17 @@
 <template>
-    <el-avatar v-if="!avatar" shape="square" :size="size">{{this.name}}</el-avatar>
-    <el-avatar v-else :src="src" shape="square" :size="size"/>
+    <el-avatar v-if="!avatar.isAvatar" shape="square" :size="size">{{this.name}}</el-avatar>
+    <el-avatar v-else :src="avatar.src" shape="square" :size="size"/>
 </template>
 
 <script setup>
-import { onMounted , ref } from "vue"
+import { onMounted , reactive, ref } from "vue"
 
 const props = defineProps(['id', 'name', 'size'])
 
-const src = ref(`http://localhost:8080/api/avatar/` + props.id)
-const avatar = ref(true)
+const avatar = reactive({
+    src: `http://localhost:8080/api/avatar/${props.id}`,
+    isAvatar: true
+})
 
 onMounted(async() => {
     await refresh()
@@ -17,12 +19,11 @@ onMounted(async() => {
 
 async function refresh() {
     let item = sessionStorage.getItem('avatar/'+ props.id)
-
     if (item != undefined)  {
         if (item == "") {
-            avatar.value = false
+            avatar.isAvatar = false
         } else {
-            src = sessionStorage.getItem('avatar/'+ props.id)
+            avatar.src = sessionStorage.getItem('avatar/'+ props.id)
         }
     } else {
         try {
@@ -31,7 +32,7 @@ async function refresh() {
             })
             sessionStorage.setItem('avatar/'+ props.id, resp)
         } catch(e) {
-            avatar.value = false
+            avatar.isAvatar = false
             sessionStorage.setItem('avatar/'+ props.id, '')
         }
     }

@@ -15,7 +15,6 @@ type Groups interface {
 	UpdateGroup(id string, patch *GroupPatch) error
 	GetGroup(id string) (*Group, error)
 	DeleteGroup(userID, id string) error
-
 	JoinGroup(userID, groupID string, userIDs []string) error
 	LeaveGroup(userID, groupID, users string) error
 }

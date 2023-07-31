@@ -56,15 +56,14 @@ func initDataDir() {
 }
 
 func initDatabase() {
-	db := config.GetDB()
-	db.AutoMigrate(&models.RoleAssignment{})
-	db.AutoMigrate(&models.User{})
-	db.AutoMigrate(&models.Group{})
-	db.AutoMigrate(&models.Message{})
-	db.AutoMigrate(&models.Session{})
-	db.AutoMigrate(&models.Request{})
-	db.AutoMigrate(&models.Moment{})
-	db.AutoMigrate(&models.Comment{})
+	config.DB.AutoMigrate(&models.User{},
+		&models.Group{},
+		&models.Message{},
+		&models.Session{},
+		&models.Request{},
+		&models.Moment{},
+		&models.Comment{},
+		&models.RoleAssignment{})
 }
 
 func initEnvironment() {

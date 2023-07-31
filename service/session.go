@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"GIM/models"
+	"GIM/pkg/config"
 	"GIM/pkg/event"
 )
 
@@ -19,7 +20,7 @@ func NewSessionManager() *SessionManager {
 
 func (s *SessionManager) List(userID string) ([]*models.Session, error) {
 	var sessions []*models.Session
-	if err := db.Where("owner_id = ?", userID).Order("updated_at DESC").Find(&sessions).Error; err != nil {
+	if err := config.DB.Where("owner_id = ?", userID).Order("updated_at DESC").Find(&sessions).Error; err != nil {
 		return nil, err
 	}
 
@@ -62,9 +63,10 @@ func (s *SessionManager) List(userID string) ([]*models.Session, error) {
 func (s *SessionManager) Create(session *models.Session) (*models.Session, error) {
 	result, err := s.getWithScope(&session.Scope)
 	if err != nil {
-		if err := db.Save(&session).Error; err != nil {
+		if err := config.DB.Save(&session).Error; err != nil {
 			return session, err
 		}
+		return session, nil
 	}
 
 	log.Warn("session has been exist")
@@ -73,7 +75,7 @@ func (s *SessionManager) Create(session *models.Session) (*models.Session, error
 
 func (s *SessionManager) Get(id string) (*models.Session, error) {
 	var session models.Session
-	if err := db.Where("id = ?", id).First(&session).Error; err != nil {
+	if err := config.DB.Where("id = ?", id).First(&session).Error; err != nil {
 		return nil, err
 	}
 
@@ -104,7 +106,7 @@ func (s *SessionManager) Get(id string) (*models.Session, error) {
 	}
 
 	session.Enabled = true
-	if err := db.First(&models.RoleAssignment{}, &models.RoleAssignment{
+	if err := config.DB.First(&models.RoleAssignment{}, &models.RoleAssignment{
 		Scope: models.Scope{
 			Kind:          session.Kind,
 			OwnerID:       session.OwnerID,
@@ -119,7 +121,7 @@ func (s *SessionManager) Get(id string) (*models.Session, error) {
 }
 
 func (s *SessionManager) Delete(id string) error {
-	return db.Delete(&models.Session{}, "id = ?", id).Error
+	return config.DB.Delete(&models.Session{}, "id = ?", id).Error
 }
 
 func (m *SessionManager) subscribe() {
@@ -166,19 +168,17 @@ func (m *SessionManager) createOrUpdate(scope *models.Scope, message string) err
 	session, err := m.getWithScope(scope)
 
 	if err != nil {
-		if err := db.Save(&models.Session{
+		return config.DB.Create(&models.Session{
 			Scope: models.Scope{
 				Kind:          scope.Kind,
 				OwnerID:       scope.OwnerID,
 				DestinationID: scope.DestinationID,
 				GroupID:       scope.GroupID,
 			},
-		}).Error; err != nil {
-			return err
-		}
+		}).Error
 	}
 
-	return db.Model(session).Updates(map[string]interface{}{
+	return config.DB.Model(session).Updates(map[string]interface{}{
 		"latest_message": message,
 	}).Error
 
@@ -186,16 +186,9 @@ func (m *SessionManager) createOrUpdate(scope *models.Scope, message string) err
 
 func (s *SessionManager) getWithScope(scope *models.Scope) (*models.Session, error) {
 	var session models.Session
-
-	if err := db.Where(&models.Session{
-		Scope: models.Scope{
-			Kind:          scope.Kind,
-			OwnerID:       scope.OwnerID,
-			DestinationID: scope.DestinationID,
-			GroupID:       scope.GroupID,
-		},
-	}).First(&session).Error; err != nil {
+	if err := config.DB.Where(scope).First(&session).Error; err != nil {
 		return nil, err
 	}
+
 	return &session, nil
 }

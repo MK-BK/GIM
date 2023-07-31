@@ -36,9 +36,9 @@ func (m *UserManager) subscribe() {
 			} else {
 				role := &models.RoleAssignment{
 					Scope: models.Scope{
-						Kind:          models.ScopeGroup,
-						OwnerID:       request.OwnerID,
-						DestinationID: request.GroupID,
+						Kind:    models.ScopeGroup,
+						OwnerID: request.OwnerID,
+						GroupID: request.GroupID,
 					},
 				}
 				if err := models.GlobalEnvironment.RoleAssignments.CreateRoleAssignments(role); err != nil {

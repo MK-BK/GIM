@@ -31,13 +31,13 @@ const useGroupStore = defineStore('group',  {
 		},
 	
 		async joinGroup(id, users) {
-			return await http.post(`/api/join/groups/${id}`, {
+			return await http.post(`/api/groups/${id}/join`, {
 				UserIDs: users
 			})
 		},
 	
 		async leaveGroup(id, key) {
-			return await http.post(`/api/leave/groups/${id}`,{
+			return await http.post(`/api/groups/${id}/leave`,{
 				UserID: key
 			})
 		}

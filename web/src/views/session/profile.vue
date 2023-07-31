@@ -1,34 +1,35 @@
 <template>
 	<el-form label-position="top" label-width="100px">
 		<el-form-item label="群聊名称">
-			<el-input v-model="group.DisplayName" @keyup.native.enter="updateGroup"></el-input>
+			<el-input v-model="groupView.group.DisplayName" @keyup.native.enter="updateGroup"></el-input>
 		</el-form-item>
 		<el-form-item label="群公告">
-			<el-input type="textarea" v-model="group.Announcement" :autosize="{minRows:4, maxRows:8}" @keyup.native.enter="updateGroup"></el-input>
+			<el-input type="textarea" v-model="groupView.group.Announcement" :autosize="{minRows:4, maxRows:8}" @keyup.native.enter="updateGroup"></el-input>
 		</el-form-item>
 		<el-form-item label="开启群验证">
-			<el-switch v-model="group.Verify" @change="updateGroup"></el-switch>
+			<el-switch v-model="groupView.group.Verify" @change="updateGroup"></el-switch>
 		</el-form-item>
 		<el-form-item label="群聊成员">
 			<el-container>
 				<div class="ui-search">
-					<el-input placeholder="请输入内容" v-model="search" clearable></el-input>
-					<el-icon @click="visible=!visible"><Plus /></el-icon>
+					<el-input placeholder="请输入内容" v-model="groupView.search" clearable></el-input>
+					<el-icon @click="groupView.visible=!groupView.visible"><Plus /></el-icon>
 				</div>
-				
-				<sessionAdd :visible="visible" :groupID="group.ID" v-on:close="visible=!visible"></sessionAdd>
-
-				<el-main v-for="user of group.Users" :key="user.ID" class="pannel-item none-border">
+				<sessionAdd :visible="groupView.visible" :groupID="groupView.group.ID" v-on:close="groupView.visible=!groupView.visible"></sessionAdd>
+				<el-main v-for="user of groupView.group.Users" :key="user.ID" class="pannel-item none-border">
 					<avatar :id="user.ID" :name="user.Name"></avatar>
 					<div>{{user.Name}}</div>
-					<div>{{getAuth(user.ID)}}</div>
-					<div v-if="canDelete(user.ID)" class="ui-icon-10 ui-icon-delete" @click="leaveGroup(user.ID)"></div>
+					<div>{{user.Auth}}</div>
+					<div>
+						<div v-if="user.CanDelete" class="ui-icon-10 ui-icon-delete" @click="leaveGroup(user.ID)"></div>
+					</div>
 				</el-main>
-				<el-footer>
-					<el-button v-if="isManager()" type="danger" @click="deleteGroup()">解散群聊</el-button>
-					<el-button v-else type="danger" @click="leaveGroup(userStore.user.ID)">退出群聊</el-button>
-				</el-footer>
+				<el-footer></el-footer>
 			</el-container>
+		</el-form-item>
+		<el-form-item>
+			<el-button v-if="isManager()" type="danger" @click="deleteGroup()">解散群聊</el-button>
+			<el-button v-else type="danger" @click="leaveGroup(userStore.user.ID)">退出群聊</el-button>
 		</el-form-item>
 	</el-form>
 </template>
@@ -37,60 +38,55 @@
 import avatar from '@/views/components/avatar.vue'
 import sessionAdd from '@/views/components/sessionAdd'
 
-import { ref, onMounted } from 'vue'
+import { onMounted, reactive } from 'vue'
 import useStore from '@/stores';
 
 const { groupStore, userStore } = useStore()
-
 const props = defineProps(['groupID'])
 
-const search = ref('')
-const group = ref({})
-const visible = ref(false)
+const groupView = reactive({
+	group: {},
+	visible: false,
+	search: ''
+})
 
 onMounted(async () => {
 	await refresh()
 })
 
 async function refresh() {
-	group.value = await groupStore.getGroup(props.groupID)
+	groupView.group = await groupStore.getGroup(props.groupID)
+	for (let user of groupView.group.Users) {
+		user.Auth = user.ID ==  groupView.group.ManagerID ? '管理员':'成员'
+		user.CanDelete = canDelete(user.ID)
+	}
 }
 
 function isManager() {
-	if (userStore.user.ID == group.value.ManagerID) {
-		return true
-	}
-	return false
+	return userStore.user.ID == groupView.group.ManagerID
 }
 
-function canDelete(key) {
-	if (key == group.value.ManagerID) {
+function canDelete(userID) {
+	if (userID == groupView.group.ManagerID) {
 		return false
 	}
 	return isManager()
 }
 
-function getAuth(key) {
-	if (key == group.value.ManagerID) {
-		return '管理员'
-	}
-	return '成员'
-}
-
 async function leaveGroup(userID) {
-	await groupStore.leaveGroup(group.value.ID, userID)
+	await groupStore.leaveGroup(groupView.group.ID, userID)
 	await refresh()
 }
 
 async function deleteGroup() {
-	await groupStore.deleteGroup(group.value.ID)
+	await groupStore.deleteGroup(groupView.group.ID)
 }
 
 async function updateGroup() {
-	await groupStore.updateGroup(group.value.ID, {
-		Name: group.value.DisplayName,
-		Announcement: group.value.Announcement,
-		verify: group.value.Verify,
+	await groupStore.updateGroup(groupView.group.ID, {
+		Name: groupView.group.DisplayName,
+		Announcement: groupView.group.Announcement,
+		verify: groupView.group.Verify,
 	})
 	await refresh()
 }

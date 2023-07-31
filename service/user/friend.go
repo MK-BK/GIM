@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"GIM/models"
+	"GIM/pkg/config"
 )
 
 func (m *UserManager) AddFriend(userID string, options *models.UserAddOption) error {
@@ -30,7 +31,7 @@ func (m *UserManager) AddFriend(userID string, options *models.UserAddOption) er
 func (m *UserManager) ListFriends(id string) ([]*models.User, error) {
 	var users []*models.User
 
-	err := db.Model(&models.User{}).
+	err := config.DB.Model(&models.User{}).
 		Joins("left join role_assignments on role_assignments.destination_id = users.id").
 		Where("role_assignments.kind = ? AND role_assignments.owner_id = ?", models.ScopeUser, id).
 		Scan(&users).Error

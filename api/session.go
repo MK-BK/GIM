@@ -28,13 +28,11 @@ func createSession(c *gin.Context) {
 	}
 
 	body.OwnerID = c.GetString("userID")
-
 	session, err := GE.Sessions.Create(&body)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
-
 	c.JSON(http.StatusOK, session)
 }
 

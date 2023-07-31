@@ -2,6 +2,7 @@ package service
 
 import (
 	"GIM/models"
+	"GIM/pkg/config"
 	"GIM/pkg/event"
 	"errors"
 
@@ -14,7 +15,7 @@ type DataCenterManager struct {
 
 func NewDataCenterManager(env *models.Environment) *DataCenterManager {
 	dataCenterManager := &DataCenterManager{
-		Redis: redisClient,
+		// Redis: redisClient,
 		// Publisher: pubsub.NewPublisher(time.Second*5, 1024),
 	}
 
@@ -62,13 +63,13 @@ func NewDataCenterManager(env *models.Environment) *DataCenterManager {
 
 func (m *DataCenterManager) GetMessages(sessioID string) ([]*models.Message, error) {
 	var session models.Session
-	if err := db.First(&session, "id = ?", sessioID).Error; err != nil {
+	if err := config.DB.First(&session, "id = ?", sessioID).Error; err != nil {
 		return nil, err
 	}
 
 	messages := make([]*models.Message, 0)
 	if session.Kind == models.ScopeUser {
-		err := db.Where("owner_id = ? AND destination_id = ? AND created_at >= ?", session.OwnerID, session.DestinationID, session.CreatedAt).
+		err := config.DB.Where("owner_id = ? AND destination_id = ? AND created_at >= ?", session.OwnerID, session.DestinationID, session.CreatedAt).
 			Or("owner_id = ? AND destination_id = ?", session.DestinationID, session.OwnerID).
 			Order("created_at ASC").
 			Find(&messages).Error
@@ -76,7 +77,7 @@ func (m *DataCenterManager) GetMessages(sessioID string) ([]*models.Message, err
 			return nil, err
 		}
 	} else if session.Kind == models.ScopeGroup {
-		err := db.Where("group_id = ? AND created_at >= ?", session.GroupID, session.CreatedAt).
+		err := config.DB.Where("group_id = ? AND created_at >= ?", session.GroupID, session.CreatedAt).
 			Order("created_at ASC").
 			Find(&messages).Error
 		if err != nil {
@@ -98,14 +99,14 @@ func (m *DataCenterManager) GetMessages(sessioID string) ([]*models.Message, err
 
 func (m *DataCenterManager) HandlerMessage(message *models.Message) error {
 	if err := checkMessageAuth(message); err != nil {
-		message.Error = err
+		message.Error = err.Error()
 	}
 
-	if err := db.Create(message).Error; err != nil {
+	if err := config.DB.Create(message).Error; err != nil {
 		return err
 	}
 
-	if message.Error != nil {
+	if message.Error == "" {
 		event.Pub(&models.MessageDistributionEvent{Message: message})
 	}
 	return nil

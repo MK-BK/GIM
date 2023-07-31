@@ -15,6 +15,7 @@ import 'element-plus/dist/index.css'
 
 import '@/css/layout.less'
 import '@/css/icon.less'
+import '@/css/moment.less'
 
 const app = createApp(App)
 

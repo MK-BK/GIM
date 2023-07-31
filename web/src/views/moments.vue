@@ -5,7 +5,7 @@
         </div>
         
         <createMoment :visible="visible" v-on:close="visible=!visible"></createMoment>
-
+        
         <div v-if="!moments.length" class="empty-content">moments列表为空</div>
         <div v-else class="moments" v-for="moment of moments" :key="moment.id">
             <div class="moment">
@@ -60,7 +60,7 @@ async function star(moment) {
     await momentStore.updateMoment(moment.ID, {
         Action: 'ADD'
     })
-    refresh()
+    await refresh()
 }
 
 async function createComment(moment) {
@@ -68,84 +68,6 @@ async function createComment(moment) {
         MomentID: moment.ID,
         Content:  moment.Value,
     })
-    refresh()
+    await refresh()
 }
 </script>
-
-<style lang="less" scoped>
-.moment-body {
-    font-size: 14px;
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
-
-    .moment-background {
-        background-image: url("@/icon/background/moment-background.png");
-        height: 200px;
-    }
-
-    .moment-action {
-        position: relative;
-        z-index: 1000;
-        left: 96%;
-        top: 20px;
-    }
-
-    .moments {
-        padding: 10px 20px;
-        border-bottom: 1px solid #0000004a;
-        text-align: left;
-
-        .moment {
-            width: 100%;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-
-            > .content {
-                flex: 4;
-                padding: 0 10px;
-                overflow-wrap: anywhere;
-                font-size: 15px;
-                align-self: center;
-                justify-content: space-between;
-                display: flex;
-            }
-
-            > .actions {
-                display: flex;
-                align-self: center;
-            }
-        }
-
-        .comments {
-            margin-top: 10px;
-            margin-left: 30px;
-        }
-
-        .comment {
-            width: 100%;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-
-            > .content {
-                flex: 4;
-                padding: 0 10px;
-                overflow-wrap: anywhere;
-                font-size: 15px;
-                align-self: center;
-                justify-content: space-between;
-                display: flex;
-            }
-
-            > .actions {
-                display: flex;
-                align-self: center;
-            }
-        }
-     
-    }
-}
-</style>

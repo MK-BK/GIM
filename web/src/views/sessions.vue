@@ -1,9 +1,9 @@
 <template>
     <el-container>
-        <createSession :visible="visible" v-on:close="visible=!visible"></createSession>
+        <createSession :visible="views.visible" v-on:close="views.visible=!views.visible"></createSession>
         <el-aside width="200px">
             <div class="ui-search">
-				<el-input placeholder="请输入内容" v-model="search" clearable></el-input>
+				<el-input placeholder="请输入内容" v-model="views.search" clearable></el-input>
 				<el-icon @click="visible=!visible"><Plus /></el-icon>
 			</div>
             <div v-if="!list.length" class="empty-content">session列表为空</div>
@@ -18,7 +18,7 @@
             </div>
         </el-aside>
         <el-main>
-            <router-view :key="key"></router-view>
+            <router-view></router-view>
         </el-main>
     </el-container>
 </template>
@@ -27,37 +27,33 @@
 import createSession from '@/views/session/create'
 import avatar from '@/views/components/avatar.vue'
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
 import useStore from '@/stores'
-
 const router = useRouter()
 const { sessionStore } = useStore()
 
-const search = ref('')  
-const visible = ref(false)
-const sessions = ref([])
+const views = reactive({
+    sessions: [],
+    visible: false,
+    search: ''
+})
 
 onMounted(async () => {
     await refresh()
 })
 
-const key = computed(()=> {
-    return router.currentRoute.name !== undefined? router.currentRoute.name + new Date(): router.currentRoute + new Date()
-})
-
 const list = computed(() =>{
-    if (search != '') {
-        return (sessions.value || []).filter((session) => {
-            return session.DisplayName.indexOf(search.value) > -1
+    if (views.search != '') {
+        return (views.sessions || []).filter((session) => {
+            return session.DisplayName.indexOf(views.search) > -1
         })
     }
-    return sessions.value
+    return views.sessions
 })
 
 async function refresh() {
-    sessions.value = await sessionStore.listSessions()
+    views.sessions = await sessionStore.listSessions()
 }
 
 async function viewSession(session) {

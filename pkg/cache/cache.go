@@ -1,7 +1,9 @@
 package cache
 
 import (
-	"fmt"
+	"GIM/models"
+	"errors"
+	"reflect"
 	"time"
 
 	goCache "github.com/patrickmn/go-cache"
@@ -10,44 +12,52 @@ import (
 var cache = goCache.New(5*time.Minute, 10*time.Minute)
 
 // Setter --------------------------------------------
-func SetUser(id string, user interface{}) error {
-	key := fmt.Sprintf("user-%s", id)
-	cache.SetDefault(key, user)
-	return nil
-}
+func Set(id string, value interface{}) error {
+	t := reflect.TypeOf(value)
+	switch t.Kind() {
+	case reflect.Ptr:
+		cache.SetDefault(id, value)
+	}
 
-func SetSession(id string, session interface{}) error {
-	key := fmt.Sprintf("session-%s", id)
-	cache.SetDefault(key, session)
-	return nil
-}
-
-func SetGroup(id string, group interface{}) error {
-	key := fmt.Sprintf("group-%s", id)
-	cache.SetDefault(key, group)
-	return nil
+	return errors.New("Value Must Be Ptr")
 }
 
 // Getter --------------------------------------------
-func GetUser(id string) (interface{}, error) {
-	key := fmt.Sprintf("user-%s", id)
-	return get(key)
-}
-
-func GetSession(id string) (interface{}, error) {
-	key := fmt.Sprintf("session-%s", id)
-	return get(key)
-}
-
-func GetGroup(id string) (interface{}, error) {
-	key := fmt.Sprintf("group-%s", id)
-	return get(key)
-}
-
-func get(key string) (interface{}, error) {
-	v, exist := cache.Get(key)
+func GetUser(id string) (*models.User, bool) {
+	v, exist := cache.Get(id)
 	if !exist {
-		return nil, fmt.Errorf("%s, record not found", key)
+		return nil, exist
 	}
-	return v, nil
+
+	if user, ok := v.(*models.User); ok {
+		return user, exist
+	}
+
+	return nil, false
+}
+
+func GetSession(id string) (*models.Session, bool) {
+	v, exist := cache.Get(id)
+	if !exist {
+		return nil, exist
+	}
+
+	if session, ok := v.(*models.Session); ok {
+		return session, exist
+	}
+
+	return nil, false
+}
+
+func GetGroup(id string) (*models.Group, bool) {
+	v, exist := cache.Get(id)
+	if !exist {
+		return nil, exist
+	}
+
+	if group, ok := v.(*models.Group); ok {
+		return group, exist
+	}
+
+	return nil, false
 }

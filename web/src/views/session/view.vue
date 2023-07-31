@@ -2,12 +2,12 @@
     <div class="session-profile">
         <el-container>
             <el-header>
-                <span>{{session.DisplayName}}</span>
-                <i v-if="session.Kind=='GROUP'&&session.Enabled" class="ui-icon ui-icon-20 ui-icon-profile" @click="visible=!visible"></i>
+                <span>{{sessionView.session.DisplayName}}</span>
+                <i v-if="sessionView.session.Kind=='GROUP'&&sessionView.session.Enabled" class="ui-icon ui-icon-20 ui-icon-profile" @click="sessionView.visible=!sessionView.visible"></i>
             </el-header>
             <el-main>
-                <div v-if="!messages.length" class="empty-message">no message to show</div>
-                <div v-else v-for="message of messages" :key="message.ID" >
+                <div v-if="!sessionView.messages.length" class="empty-message">no message to show</div>
+                <div v-else v-for="message of sessionView.messages" :key="message.ID">
                     <div class="message-item" :class="getPosition(message)">
                         <avatar :id="message.OwnerID" :name="message.OwnerName" :size="40"></avatar>
                         <div class="content">
@@ -16,27 +16,19 @@
                         </div>
                     </div>
                     <div v-if:="message.Error" class="error">
-                        <div class="ui-icon ui-icon-20 ui-icon-error" :title="getMessageError(message)">
-                            {{ getMessageError(message) }}
-                        </div>
+                        <div class="ui-icon ui-icon-20 ui-icon-error" :title="getMessageError(message)">{{ getMessageError(message) }}</div>
                     </div>
                 </div>
-                <div id="bottom"></div>
             </el-main>
             <div class="chat-input-container">
                 <div class="chat-input">
-                    <textarea
-                        ref="textarea"
-                        class="chat-textarea"
-                        placeholder="请输入消息"
-                        v-model="content"
-                        @input="onInput"
-                        @keydown.enter.prevent="sendMessage"></textarea>
+                    <textarea ref="textarea" class="chat-textarea" placeholder="请输入消息" v-model="sessionView.content" @keydown.enter.prevent="sendMessage"></textarea>
                     <button class="chat-send-btn" @click="sendMessage">发送</button>
                 </div>
             </div>
         </el-container>
-        <sessionProfile v-if="visible" :groupID="session.GroupID"></sessionProfile>
+
+        <sessionProfile v-if="sessionView.visible" :groupID="sessionView.session.GroupID"></sessionProfile>
     </div>
 </template>
 
@@ -44,75 +36,51 @@
 import sessionProfile from '@/views/session/profile.vue'
 import avatar from '@/views/components/avatar.vue'
 
-import { ref, onMounted, watch } from 'vue'
+import { onMounted, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import useStore from '@/stores'
 
 const { sessionStore }  = useStore()
 const route = useRoute()
 
-const session = ref({})
-const messages =  ref([])
-const group = ref({})
-
-const content = ref('')
-const visible = ref(false)
-
-const bottom = ref(null)
+const sessionView = reactive({
+    session: {},
+    messages: [],
+    content: '',
+    visible: false
+})
 
 onMounted(async () => {
     await refresh()
     watch(() => route.params.id, async () => {
         await refresh()
-        visible.value = false
+        sessionView.visible = false
     });
 });
 
 async function refresh() {
-    try {
-        session.value = await sessionStore.getSession(route.params.id)
-    } catch (e) {
-        console.log(e)
-    }
-
-    messages.value = await sessionStore.getMessages(route.params.id)
-    scorllBottom()
+    sessionView.session = await sessionStore.getSession(route.params.id)
+    sessionView.messages = await sessionStore.getMessages(route.params.id)
 }
 
 function getPosition(message) {
     return {
-        'position-right': message.OwnerID === session.value.OwnerID
+        'position-right': message.OwnerID === sessionView.session.OwnerID
     }
 }
 
 function getMessageError(message) {
-    if (message.Kind == "GROUP") {
-        return "你已经被移除群聊"
-    }
-
-    return "你的消息已被拒绝接收"
+    return message.Kind == "GROUP" ? '你已经被移除群聊' : '你的消息已被拒绝接收'
 }
 
 async function sendMessage() {
-    if (content != "") {
+    if (sessionView.content != "") {
        await sessionStore.sendMessage(session.value.ID, {
-            Content: content.value,
+            Content: sessionView.content,
         })
-
-        content.value = '';
+        sessionView.content = '';
     }
     await refresh()
-    scorllBottom()
-}
-
-function scorllBottom() {
-    document.getElementById("bottom").scrollIntoView();
-}
-
-function onInput() {
-    // nextTick(() => {
-    //     this.textareaHeight = `${this.$refs.input.scrollHeight}px`;
-    // });
 }
 </script>
 
@@ -133,7 +101,6 @@ function onInput() {
             padding-bottom: 10px !important;
             overflow-y: auto;
             height: 80%;
-
             .message-item {
                 display: flex;
                 flex-wrap: wrap;
@@ -162,11 +129,6 @@ function onInput() {
                     background-color:#00800033;
                 }
             }
-
-            .error {
-                
-            }
-
             .position-right {
                 flex-direction: row-reverse;
                 .content {
@@ -174,21 +136,18 @@ function onInput() {
                 }
             }
         }
-
         .el-footer {
             container {
                 position: relative;
                 width: 100%;
                 height: 100%;
             }
-
             .textarea {
                 width: 100%;
                 padding: 10px;
                 border: none;
                 overflow-y: auto;
             }
-
             .button {
                 position: absolute;
                 bottom: 10px;
@@ -220,7 +179,6 @@ function onInput() {
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         overflow: hidden;
     }
-
     .chat-textarea {
         flex-grow: 1;
         width: 100%;
@@ -232,7 +190,6 @@ function onInput() {
         font-size: 14px;
         line-height: 20px;
     }
-
     .chat-send-btn {
         display: inline-block;
         padding: 8px 16px;
@@ -246,7 +203,6 @@ function onInput() {
         cursor: pointer;
         transition: background-color 0.2s ease-in-out;
     }
-
     .chat-send-btn:hover {
         background-color: #0062cc;
     }

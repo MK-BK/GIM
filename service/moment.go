@@ -2,6 +2,7 @@ package service
 
 import (
 	"GIM/models"
+	"GIM/pkg/config"
 )
 
 type MomentManager struct{}
@@ -13,8 +14,8 @@ func NewMomentManager() *MomentManager {
 }
 
 func (m *MomentManager) List(userID string) ([]*models.Moment, error) {
-	var moments []*models.Moment
-	if err := db.Model(&models.Moment{}).
+	moments := make([]*models.Moment, 0)
+	if err := config.DB.Model(&models.Moment{}).
 		Joins("left join role_assignments on role_assignments.destination_id = moments.owner_id").
 		Where("role_assignments.kind = ? AND role_assignments.owner_id = ?", models.ScopeUser, userID).
 		Or("moments.owner_id = ?", userID).
@@ -31,7 +32,7 @@ func (m *MomentManager) List(userID string) ([]*models.Moment, error) {
 		}
 
 		var comments []models.Comment
-		if err := db.Where("moment_id = ?", moment.ID).Find(&comments).Error; err != nil {
+		if err := config.DB.Where("moment_id = ?", moment.ID).Find(&comments).Error; err != nil {
 			log.Error(err)
 		}
 
@@ -43,12 +44,12 @@ func (m *MomentManager) List(userID string) ([]*models.Moment, error) {
 }
 
 func (m *MomentManager) Create(moment *models.Moment) error {
-	return db.Save(moment).Error
+	return config.DB.Save(moment).Error
 }
 
 func (m *MomentManager) Get(id string) (*models.Moment, error) {
 	var moment models.Moment
-	if err := db.Find(&moment, "id = ?", id).Error; err != nil {
+	if err := config.DB.Find(&moment, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 
@@ -57,7 +58,7 @@ func (m *MomentManager) Get(id string) (*models.Moment, error) {
 
 func (m *MomentManager) GetMomentComments(id string) (*models.TreeComment, error) {
 	var comments []*models.Comment
-	if err := db.Where("moment_id = ?", id).Find(&comments).Error; err != nil {
+	if err := config.DB.Where("moment_id = ?", id).Find(&comments).Error; err != nil {
 		return nil, err
 	}
 
@@ -103,7 +104,7 @@ func treeComment(comments []*models.Comment, commentID string) *models.TreeComme
 // }
 
 func (m *MomentManager) Delete(id string) error {
-	return db.Delete(&models.Moment{}, "id = ?", id).Error
+	return config.DB.Delete(&models.Moment{}, "id = ?", id).Error
 }
 
 // select * from moment a INNER JOIN role_assignment rs on ra.DestinationID == moment.owner_id
