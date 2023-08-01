@@ -18,6 +18,8 @@ var (
 )
 
 func handlerEvent(c *gin.Context) {
+	userID := c.GetString("userID")
+
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
@@ -28,10 +30,19 @@ func handlerEvent(c *gin.Context) {
 	for {
 		select {
 		case evt := <-ch:
-			ws.WriteJSON(map[string]interface{}{
-				"Topic": evt.Type(),
-				"Body":  evt,
-			})
+			if e, ok := evt.(event.ScopeEvent); ok {
+				if e.GetUserID() == userID {
+					ws.WriteJSON(map[string]interface{}{
+						"Topic": evt.Type(),
+						"Body":  evt,
+					})
+				}
+			} else {
+				ws.WriteJSON(map[string]interface{}{
+					"Topic": evt.Type(),
+					"Body":  evt,
+				})
+			}
 		}
 	}
 }

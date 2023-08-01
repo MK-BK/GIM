@@ -27,7 +27,7 @@ type MessageImage struct {
 	Path string
 }
 
-func (m *Message) UnmarshalJSON(b []byte) error {
+func (message *Message) UnmarshalJSON(b []byte) error {
 	var toMessage struct {
 		Models
 		Scope
@@ -40,10 +40,10 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	m.Models = toMessage.Models
-	m.Scope = toMessage.Scope
-	m.Category = toMessage.Category
-	m.Error = toMessage.Error
+	message.Models = toMessage.Models
+	message.Scope = toMessage.Scope
+	message.Category = toMessage.Category
+	message.Error = toMessage.Error
 
 	switch toMessage.Category {
 	case CategoryText:
@@ -51,13 +51,13 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 		if err := json.Unmarshal(toMessage.Spec, &spec); err != nil {
 			return err
 		}
-		m.Spec = &spec
+		message.Spec = &spec
 	case CategoryImage:
 		var spec MessageImage
 		if err := json.Unmarshal(toMessage.Spec, &spec); err != nil {
 			return err
 		}
-		m.Spec = &spec
+		message.Spec = &spec
 	}
 
 	return nil
@@ -68,3 +68,11 @@ type MessageDistributionEvent struct {
 }
 
 func (*MessageDistributionEvent) Type() string { return "message:distribution" }
+
+func (message *MessageDistributionEvent) GetUserID() string {
+	if message.Kind == ScopeUser {
+		return message.DestinationID
+	}
+
+	return message.GroupID
+}

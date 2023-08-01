@@ -91,31 +91,3 @@ func (m *RequestManager) Verify(request *models.Request, userID string) error {
 func (m *RequestManager) DeleteRequest(id string) error {
 	return config.DB.Delete(&models.Request{}, "id = ?", id).Error
 }
-
-func (*RequestManager) GetDescription(request *models.Request) string {
-	var description string
-	// if request.Kind == models.USERMESSAGE {
-	// 	user, err := models.GlobalEnvironment.UserInterface.GetUser(request.OwnerID)
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 	}
-
-	// 	description = fmt.Sprintf("%s 请求添加好友", user.Name)
-	// }
-
-	// if request.Kind == models.GROUPMESSAGE {
-	// 	visitUser, err := models.GlobalEnvironment.UserInterface.GetUser(request.InviteID)
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 	}
-
-	// 	hasVistUser, err := models.GlobalEnvironment.UserInterface.GetUser(request.OwnerID)
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 	}
-
-	// 	description = fmt.Sprintf("%s 邀请 %s 进入群聊", visitUser.Name, hasVistUser.Name)
-
-	// }
-	return description
-}

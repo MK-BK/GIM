@@ -7,11 +7,6 @@ type Comment struct {
 	Content  string `gorm:"type:longtext"`
 }
 
-type TreeComment struct {
-	*Comment
-	Children []*TreeComment
-}
-
 type Comments interface {
 	List(id string) ([]*Comment, error)
 	Create(comment *Comment) error

@@ -27,6 +27,9 @@ app.config.globalProperties = {
     $utils: utils
 }
 
+app.provide('event', event);
+app.provide('utils', utils);
+
 app.use(pinia).
 use(router).
 use(ElementPlus).

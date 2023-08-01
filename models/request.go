@@ -14,7 +14,6 @@ type Requests interface {
 	GetRequest(id string) (*Request, error)
 	UpdateRequest(userID, id string) error
 	DeleteRequest(id string) error
-	GetDescription(request *Request) string
 }
 
 type RequestUpdateEvent struct {

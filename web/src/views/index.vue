@@ -18,27 +18,31 @@
 
 <script setup>
 import avatar from '@/views/components/avatar'
-import { computed, reactive } from 'vue'
+import { inject, computed, onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
-
 import useStore from '@/stores' 
 
 const { userStore } = useStore()
-
 const route = useRoute()
+
 const user = computed(() => {
     return userStore.user
 })
 
-const menus = reactive(
-    [
-        {name: 'sessions', path: '/sessions'},
-        {name: 'users', path: '/users'},
-        {name: 'requests', path: '/requests'},
-        {name: 'moments', path: '/moments'},
-        {name: 'setting', path: '/setting'},
-    ]
-)
+const event = inject('event');
+
+onMounted(()=> {
+    event.sub('message:distribution',(body)=> {
+    })
+})
+
+const menus = reactive([
+    {name: 'sessions', path: '/sessions'},
+    {name: 'users', path: '/users'},
+    {name: 'requests', path: '/requests'},
+    {name: 'moments', path: '/moments'},
+    {name: 'setting', path: '/setting'},
+])
 
 function active(path) {
     return route.path.indexOf(path) > -1

@@ -21,6 +21,7 @@ const useUserStore = defineStore('user', {
 				this.setToken(resp.headers['token'])
 				sessionStorage.setItem('token', resp.headers['token'])
 			}
+
 			this.setUser(resp.data)
 		},
 

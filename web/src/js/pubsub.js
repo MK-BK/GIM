@@ -4,7 +4,7 @@ export default {
 
     connect() {
         let that = this
-        let ws = new WebSocket("ws://localhost:10099/event?token=" + sessionStorage.getItem('token'))
+        let ws = new WebSocket("ws://localhost:8080/api/event?token=" + sessionStorage.getItem('token'))
 
         ws.onmessage = function(msg) {
             let data = JSON.parse(msg.data);

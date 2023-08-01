@@ -4,6 +4,10 @@ type Event interface {
 	Type() string
 }
 
+type ScopeEvent interface {
+	GetUserID() string
+}
+
 type Subscribe struct {
 	ch     chan Event
 	topics []string
