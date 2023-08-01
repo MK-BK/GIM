@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"path/filepath"
 
@@ -15,8 +16,7 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	fileID := uuid.NewString()
-
+	fileID := fmt.Sprintf("%s%s", uuid.NewString(), filepath.Ext(file.Filename))
 	filePath := filepath.Join("/tmp", fileID)
 
 	if err := c.SaveUploadedFile(file, filePath); err != nil {

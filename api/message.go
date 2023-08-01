@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -69,8 +68,6 @@ func getMessage(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("+++++++++++++++ var:", sessionID, fileID)
-
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
@@ -79,7 +76,6 @@ func getMessage(c *gin.Context) {
 	path := filepath.Join(pwd, "sessions", sessionID, "images", fileID)
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println("++++++++++++++++++ path:", path)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}

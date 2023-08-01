@@ -47,8 +47,7 @@ async function searchUser() {
 
 async function createFriend(user) {
     await userStore.addFriend({
-        ID: user.ID,
-        Description: 'test'
+        ID: user.ID
     })
     emits('close')
 }

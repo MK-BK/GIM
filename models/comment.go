@@ -4,7 +4,6 @@ type Comment struct {
 	Models
 	OwnerID  string
 	MomentID string
-	ParentID string
 	Content  string `gorm:"type:longtext"`
 }
 

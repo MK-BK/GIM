@@ -16,7 +16,7 @@ type Message struct {
 	Category  string
 	OwnerName string      `gorm:"-"`
 	Spec      interface{} `gorm:"json"`
-	Error     string
+	Error     string      `gorm:"json"`
 }
 
 type MessageText struct {

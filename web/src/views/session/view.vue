@@ -16,7 +16,7 @@
                                 <div class="message">{{message.Spec.Content}}</div>
                             </div>
                             <div v-if="message.Category=='IMAGE'">
-                                <el-avatar :size="50" :src="getFile(message.Spec.Path)" />
+                                <el-avatar shape="square" fit="fill" :src="getFile(message.Spec.Path)" />
                             </div>
                         </div>
                     </div>
@@ -25,21 +25,24 @@
                     </div>
                 </div>
             </el-main>
-            <div class="chat-input-container">
-                <el-upload class="avatar-uploader"
-                    :action="sessionView.url"
-                    :headers="headers"
-                    :show-file-list="false"
-                    :with-credentials='true'
-                    :on-success="handleSuccess">
-                        <el-button size="small" type="primary">发送图片</el-button>
-                </el-upload>
-
-                <div class="chat-input">
-                    <textarea ref="textarea" class="chat-textarea" placeholder="请输入消息" v-model="sessionView.content" @keydown.enter.prevent="sendMessage"></textarea>
-                    <button class="chat-send-btn" @click="sendMessage">发送</button>
+            <el-footer>
+                <div class="actions">
+                    <el-upload class="avatar-uploader"
+                        :action="sessionView.url"
+                        :headers="headers"
+                        :show-file-list="false"
+                        :with-credentials='true'
+                        :on-success="sendMessageImage">
+                        <div class="ui-icon ui-icon-20 ui-action-picture"></div>
+                    </el-upload>
                 </div>
-            </div>
+                <div class="chat-input-container">
+                    <div class="chat-input">
+                        <textarea ref="textarea" class="chat-textarea" placeholder="请输入消息" v-model="sessionView.content" @keydown.enter.prevent="sendTextMessage"></textarea>
+                        <button class="chat-send-btn" @click="sendTextMessage">发送</button>
+                    </div>
+                </div>
+            </el-footer>
         </el-container>
 
         <sessionProfile v-if="sessionView.visible" :groupID="sessionView.session.GroupID"></sessionProfile>
@@ -72,23 +75,10 @@ const headers = reactive({
 onMounted(async () => {
     await refresh()
     watch(() => route.params.id, async () => {
-        await refresh()
+        await refresh() 
         sessionView.visible = false
     });
 });
-
-function getFile(path) {
-    return `http://localhost:10080/sessions/${sessionView.session.ID}/files/${path}`
-}
-
-async function handleSuccess(response, file, fileList) {
-    await sessionStore.sendMessage(sessionView.session.ID, {
-        Category: 'IMAGE',
-        Spec: {
-            Path: response.FileID
-        },
-    })
-}
 
 async function refresh() {
     sessionView.session = await sessionStore.getSession(route.params.id)
@@ -105,7 +95,11 @@ function getMessageError(message) {
     return message.Kind == "GROUP" ? '你已经被移除群聊' : '你的消息已被拒绝接收'
 }
 
-async function sendMessage() {
+function getFile(path) {
+    return `http://localhost:8080/api/sessions/${sessionView.session.ID}/messages/files/${path}`
+}
+
+async function sendTextMessage() {
     if (sessionView.content != "") {
        await sessionStore.sendMessage(sessionView.session.ID, {
             Category: 'TEXT',
@@ -116,6 +110,15 @@ async function sendMessage() {
         sessionView.content = '';
     }
     await refresh()
+}
+
+async function sendMessageImage(response) {
+    await sessionStore.sendMessage(sessionView.session.ID, {
+        Category: 'IMAGE',
+        Spec: {
+            Path: response.FileID
+        },
+    })
 }
 </script>
 
@@ -195,6 +198,10 @@ async function sendMessage() {
         width: 20%;
         height: 100%;
     }
+    .actions {
+        display: flex;
+        padding: 5px 5px;
+    }
     .chat-input-container {
         display: flex;
         justify-content: center;
@@ -203,7 +210,6 @@ async function sendMessage() {
         box-sizing: border-box;
         background-color: #f5f5f5;
     }
-
     .chat-input {
         display: flex;
         align-items: center;

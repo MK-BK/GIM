@@ -130,6 +130,9 @@ func (m *DataCenterManager) HandlerMessage(sessionID string, message *models.Mes
 			defer dest.Close()
 
 			io.Copy(dest, source)
+			if err := os.Remove(filepath.Join("/tmp", v.Path)); err != nil {
+				log.Error(err)
+			}
 		}
 	}
 
